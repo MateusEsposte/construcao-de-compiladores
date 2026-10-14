@@ -11,7 +11,6 @@ int main(void)
     }
 
     Lexer lexer;
-
     lexer_init(&lexer, file);
 
     Token token;
@@ -20,11 +19,14 @@ int main(void)
         token = lexer_next_token(&lexer);
 
         printf(
-            "Tipo: %s | Linha: %d | Coluna: %d\n",
+            "%-25s | %-20s | %5d | %6d\n",
             token_type_to_string(token.type),
+            token.lexeme != NULL ? token.lexeme : "(vazio)",
             token.line,
             token.column
         );
+
+        token_free(&token);
 
     } while (token.type != TOK_EOF);
 

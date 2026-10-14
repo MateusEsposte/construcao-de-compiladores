@@ -43,6 +43,9 @@ typedef struct {
     int column;
 } Token;
 
+
 const char *token_type_to_string(TokenType type);
+void token_free(Token *token);
+
 
 #endif

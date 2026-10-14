@@ -1,7 +1,21 @@
 #include "lexer.h"
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
+
+static char *copy_lexeme(const char *text, size_t length){
+    char *copy = malloc(length + 1);
+
+    if (copy == NULL) {
+        return NULL;
+    }
+
+    memcpy(copy, text, length);
+    copy[length] = '\0';
+
+    return copy;
+}
 
 static int is_word_char(int c){
     return isalpha(c) || isdigit(c) || c == '-';
@@ -29,24 +43,30 @@ void lexer_init(Lexer *lexer, FILE *file){
 
 
 static TokenType keyword_type(char *word){
-    for (int i = 0; word[i] != '\0'; i++) {
-        word[i] = toupper((unsigned char)word[i]);
+    char upper[31];
+    int i = 0;
+
+    while (word[i] != '\0' && i < 30) {
+        upper[i] = (char)toupper((unsigned char)word[i]);
+        i++;
     }
 
-    if (strcmp(word, "IDENTIFICATION") == 0) return TOK_IDENTIFICATION;
-    if (strcmp(word, "ENVIRONMENT") == 0)    return TOK_ENVIRONMENT;
-    if (strcmp(word, "DATA") == 0)           return TOK_DATA;
-    if (strcmp(word, "PROCEDURE") == 0)      return TOK_PROCEDURE;
-    if (strcmp(word, "DIVISION") == 0)       return TOK_DIVISION;
-    if (strcmp(word, "SECTION") == 0)        return TOK_SECTION;
-    if (strcmp(word, "DISPLAY") == 0)        return TOK_DISPLAY;
-    if (strcmp(word, "ACCEPT") == 0)         return TOK_ACCEPT;
-    if (strcmp(word, "PERFORM") == 0)        return TOK_PERFORM;
-    if (strcmp(word, "STOP") == 0)           return TOK_STOP;
-    if (strcmp(word, "RUN") == 0)            return TOK_RUN;
-    if (strcmp(word, "IF") == 0)             return TOK_IF;
-    if (strcmp(word, "ELSE") == 0)           return TOK_ELSE;
-    if (strcmp(word, "MOVE") == 0)           return TOK_MOVE;
+    upper[i] = '\0';
+
+    if (strcmp(upper, "IDENTIFICATION") == 0) return TOK_IDENTIFICATION;
+    if (strcmp(upper, "ENVIRONMENT") == 0)    return TOK_ENVIRONMENT;
+    if (strcmp(upper, "DATA") == 0)           return TOK_DATA;
+    if (strcmp(upper, "PROCEDURE") == 0)      return TOK_PROCEDURE;
+    if (strcmp(upper, "DIVISION") == 0)       return TOK_DIVISION;
+    if (strcmp(upper, "SECTION") == 0)        return TOK_SECTION;
+    if (strcmp(upper, "DISPLAY") == 0)        return TOK_DISPLAY;
+    if (strcmp(upper, "ACCEPT") == 0)         return TOK_ACCEPT;
+    if (strcmp(upper, "PERFORM") == 0)        return TOK_PERFORM;
+    if (strcmp(upper, "STOP") == 0)           return TOK_STOP;
+    if (strcmp(upper, "RUN") == 0)            return TOK_RUN;
+    if (strcmp(upper, "IF") == 0)             return TOK_IF;
+    if (strcmp(upper, "ELSE") == 0)           return TOK_ELSE;
+    if (strcmp(upper, "MOVE") == 0)           return TOK_MOVE;
 
     return TOK_IDENTIFIER;
 }
@@ -65,7 +85,7 @@ static Token read_word(Lexer *lexer){
 
     while (is_word_char(lexer->current_char)) {
         if (length < 30) {
-            word[length] = lexer->current_char;
+            word[length] = (char)lexer->current_char;
         }
 
         length++;
@@ -74,19 +94,26 @@ static Token read_word(Lexer *lexer){
 
     if (length > 30) {
         token.type = TOK_ERROR;
+        token.lexeme = copy_lexeme(word, 30);
         return token;
     }
 
     word[length] = '\0';
 
-    token.type = keyword_type(word);
+    token.lexeme = copy_lexeme(word, (size_t)length);
+
+    if (token.lexeme == NULL) {
+        token.type = TOK_ERROR;
+        return token;
+    }
+
+    token.type = keyword_type(token.lexeme);
 
     return token;
 }
 
 
-static Token read_number(Lexer *lexer)
-{
+static Token read_number(Lexer *lexer){
     Token token;
 
     token.line = lexer->line;
@@ -94,20 +121,88 @@ static Token read_number(Lexer *lexer)
     token.type = TOK_NUMERIC_LITERAL;
     token.lexeme = NULL;
 
+    char number[64];
+    int length = 0;
+
     if (lexer->current_char == '+' || lexer->current_char == '-') {
+        number[length++] = (char)lexer->current_char;
         lexer_advance(lexer);
     }
 
     while (isdigit(lexer->current_char)) {
+        if (length < 63) {
+            number[length++] = (char)lexer->current_char;
+        }
         lexer_advance(lexer);
     }
 
     if (lexer->current_char == '.') {
-        lexer_advance(lexer);
+        int next_char = fgetc(lexer->file);
+        ungetc(next_char, lexer->file);
 
-        while (isdigit(lexer->current_char)) {
+        if (isdigit(next_char)) {
+            number[length++] = '.';
             lexer_advance(lexer);
+
+            while (isdigit(lexer->current_char)) {
+                if (length < 63) {
+                    number[length++] = (char)lexer->current_char;
+                }
+                lexer_advance(lexer);
+            }
         }
+    }
+
+    number[length] = '\0';
+    token.lexeme = copy_lexeme(number, (size_t)length);
+
+    if (token.lexeme == NULL) {
+        token.type = TOK_ERROR;
+    }
+
+    return token;
+}
+
+
+static Token read_string(Lexer *lexer)
+{
+    Token token;
+
+    token.line = lexer->line;
+    token.column = lexer->column;
+    token.type = TOK_ALPHANUMERIC_LITERAL;
+    token.lexeme = NULL;
+
+    char quote = (char)lexer->current_char;
+    char text[256];
+    int length = 0;
+
+    text[length++] = quote;
+    lexer_advance(lexer);
+
+    while (lexer->current_char != quote &&
+           lexer->current_char != EOF &&
+           lexer->current_char != '\n') {
+
+        if (length < 254) {
+            text[length++] = (char)lexer->current_char;
+        }
+
+        lexer_advance(lexer);
+    }
+
+    if (lexer->current_char != quote) {
+        token.type = TOK_ERROR;
+    } else {
+        text[length++] = quote;
+        lexer_advance(lexer);
+    }
+
+    text[length] = '\0';
+    token.lexeme = copy_lexeme(text, (size_t)length);
+
+    if (token.lexeme == NULL) {
+        token.type = TOK_ERROR;
     }
 
     return token;
@@ -130,6 +225,11 @@ Token lexer_next_token(Lexer *lexer){
         return token;
     }
 
+    if (lexer->current_char == '"' ||
+        lexer->current_char == '\'') {
+        return read_string(lexer);
+    }
+
     if (isalpha(lexer->current_char)) {
         return read_word(lexer);
     }
@@ -142,7 +242,19 @@ Token lexer_next_token(Lexer *lexer){
         return read_number(lexer);
     }
 
-    token.type = TOK_ERROR;
+    char punctuation[2] = {
+        (char)lexer->current_char,
+        '\0'
+    };
+
+    token.lexeme = copy_lexeme(punctuation, 1);
+
+    if (token.lexeme == NULL) {
+        token.type = TOK_ERROR;
+        lexer_advance(lexer);
+        return token;
+    }
+
     switch (lexer->current_char) {
         case '.':
             token.type = TOK_PERIOD;

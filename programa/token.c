@@ -1,7 +1,7 @@
 #include "token.h"
+#include <stdlib.h>
 
-const char *token_type_to_string(TokenType type)
-{
+const char *token_type_to_string(TokenType type){
     switch (type) {
         case TOK_IDENTIFICATION:         return "TOK_IDENTIFICATION";
         case TOK_ENVIRONMENT:            return "TOK_ENVIRONMENT";
@@ -33,4 +33,10 @@ const char *token_type_to_string(TokenType type)
 
         default:                         return "TOK_UNKNOWN";
     }
+}
+
+
+void token_free(Token *token){
+    free(token->lexeme);
+    token->lexeme = NULL;
 }
