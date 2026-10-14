@@ -72,7 +72,8 @@ static TokenType keyword_type(char *word){
 }
 
 
-static Token read_word(Lexer *lexer){
+static Token read_word(Lexer *lexer)
+{
     Token token;
 
     token.line = lexer->line;
@@ -92,17 +93,17 @@ static Token read_word(Lexer *lexer){
         lexer_advance(lexer);
     }
 
-    if (length > 30) {
+    int stored_length = length > 30 ? 30 : length;
+    word[stored_length] = '\0';
+
+    token.lexeme = copy_lexeme(word, (size_t)stored_length);
+
+    if (token.lexeme == NULL) {
         token.type = TOK_ERROR;
-        token.lexeme = copy_lexeme(word, 30);
         return token;
     }
 
-    word[length] = '\0';
-
-    token.lexeme = copy_lexeme(word, (size_t)length);
-
-    if (token.lexeme == NULL) {
+    if (length > 30 || word[stored_length - 1] == '-') {
         token.type = TOK_ERROR;
         return token;
     }
@@ -209,6 +210,39 @@ static Token read_string(Lexer *lexer)
 }
 
 
+static Token read_invalid_signed_word(Lexer *lexer)
+{
+    Token token;
+
+    token.line = lexer->line;
+    token.column = lexer->column;
+    token.type = TOK_ERROR;
+    token.lexeme = NULL;
+
+    char text[31];
+    int length = 0;
+
+    text[length++] = (char)lexer->current_char;
+    lexer_advance(lexer);
+
+    while (is_word_char(lexer->current_char)) {
+        if (length < 30) {
+            text[length] = (char)lexer->current_char;
+        }
+
+        length++;
+        lexer_advance(lexer);
+    }
+
+    int stored_length = length > 30 ? 30 : length;
+    text[stored_length] = '\0';
+
+    token.lexeme = copy_lexeme(text, (size_t)stored_length);
+
+    return token;
+}
+
+
 Token lexer_next_token(Lexer *lexer){
     Token token;
 
@@ -239,6 +273,16 @@ Token lexer_next_token(Lexer *lexer){
     }
 
     if (lexer->current_char == '+' || lexer->current_char == '-') {
+        int next_char = fgetc(lexer->file);
+
+        if (next_char != EOF) {
+            ungetc(next_char, lexer->file);
+        }
+
+        if (isalpha(next_char)) {
+            return read_invalid_signed_word(lexer);
+        }
+
         return read_number(lexer);
     }
 
