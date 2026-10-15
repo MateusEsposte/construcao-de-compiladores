@@ -137,8 +137,7 @@ static TokenType keyword_type(char *word){
 }
 
 
-static Token read_word(Lexer *lexer)
-{
+static Token read_word(Lexer *lexer){
     Token token;
 
     token.line = lexer->line;
@@ -146,19 +145,25 @@ static Token read_word(Lexer *lexer)
     token.type = TOK_IDENTIFIER;
     token.lexeme = NULL;
 
-    char word[31];
+    char word[256];
     int length = 0;
+    int too_long = 0;
 
     while (is_word_char(lexer->current_char)) {
-        if (length < 30) {
+        if (length < (int)sizeof(word) - 1) {
             word[length] = (char)lexer->current_char;
+        } else {
+            too_long = 1;
         }
 
         length++;
         lexer_advance(lexer);
     }
 
-    int stored_length = length > 30 ? 30 : length;
+    int stored_length = length < (int)sizeof(word) - 1
+                      ? length
+                      : (int)sizeof(word) - 1;
+
     word[stored_length] = '\0';
 
     token.lexeme = copy_lexeme(word, (size_t)stored_length);
@@ -168,7 +173,7 @@ static Token read_word(Lexer *lexer)
         return token;
     }
 
-    if (length > 30 || word[stored_length - 1] == '-') {
+    if (too_long || length > 30 || word[stored_length - 1] == '-') {
         token.type = TOK_ERROR;
         return token;
     }
