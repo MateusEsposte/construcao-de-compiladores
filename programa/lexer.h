@@ -9,7 +9,7 @@ typedef struct {
     int current_char;
     int line;
     int column;
-
+    int line_indicator;
 } Lexer;
 
 void lexer_init(Lexer *lexer, FILE *file);

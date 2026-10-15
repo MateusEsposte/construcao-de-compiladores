@@ -17,12 +17,14 @@ static char *copy_lexeme(const char *text, size_t length){
     return copy;
 }
 
+
 static int is_word_char(int c){
     return isalpha(c) || isdigit(c) || c == '-';
 }
 
 
-static void lexer_advance(Lexer *lexer){
+static void lexer_advance_raw(Lexer *lexer)
+{
     if (lexer->current_char == '\n') {
         lexer->line++;
         lexer->column = 1;
@@ -34,11 +36,74 @@ static void lexer_advance(Lexer *lexer){
 }
 
 
+static void lexer_skip_fixed_format(Lexer *lexer){
+    while (lexer->current_char != EOF) {
+
+        if (lexer->column <= 6) {
+            lexer_advance_raw(lexer);
+            continue;
+        }
+
+        if (lexer->column == 7) {
+            lexer->line_indicator = lexer->current_char;
+
+            int indicator = toupper(
+                (unsigned char)lexer->current_char
+            );
+
+            if (indicator == '*' ||
+                indicator == '/' ||
+                indicator == 'D') {
+
+                while (lexer->current_char != '\n' &&
+                       lexer->current_char != EOF) {
+                    lexer_advance_raw(lexer);
+                }
+
+                if (lexer->current_char == '\n') {
+                    lexer_advance_raw(lexer);
+                }
+
+                continue;
+            }
+
+            lexer_advance_raw(lexer);
+            continue;
+        }
+
+        if (lexer->column >= 73) {
+            while (lexer->current_char != '\n' &&
+                   lexer->current_char != EOF) {
+                lexer_advance_raw(lexer);
+            }
+
+            if (lexer->current_char == '\n') {
+                lexer_advance_raw(lexer);
+            }
+
+            continue;
+        }
+
+        return;
+    }
+}
+
+
+static void lexer_advance(Lexer *lexer)
+{
+    lexer_advance_raw(lexer);
+    lexer_skip_fixed_format(lexer);
+}
+
+
 void lexer_init(Lexer *lexer, FILE *file){
     lexer->file = file;
     lexer->current_char = fgetc(file);
     lexer->line = 1;
     lexer->column = 1;
+    lexer->line_indicator = 0;
+
+    lexer_skip_fixed_format(lexer);
 }
 
 
@@ -124,6 +189,7 @@ static Token read_number(Lexer *lexer){
 
     char number[64];
     int length = 0;
+    int has_digit = 0;
 
     if (lexer->current_char == '+' || lexer->current_char == '-') {
         number[length++] = (char)lexer->current_char;
@@ -134,6 +200,8 @@ static Token read_number(Lexer *lexer){
         if (length < 63) {
             number[length++] = (char)lexer->current_char;
         }
+
+        has_digit = 1;
         lexer_advance(lexer);
     }
 
@@ -152,6 +220,10 @@ static Token read_number(Lexer *lexer){
                 lexer_advance(lexer);
             }
         }
+    }
+
+    if (!has_digit) {
+        token.type = TOK_ERROR;
     }
 
     number[length] = '\0';
@@ -177,29 +249,66 @@ static Token read_string(Lexer *lexer)
     char quote = (char)lexer->current_char;
     char text[256];
     int length = 0;
+    int invalid = 0;
 
     text[length++] = quote;
     lexer_advance(lexer);
 
-    while (lexer->current_char != quote &&
-           lexer->current_char != EOF &&
-           lexer->current_char != '\n') {
+    while (lexer->current_char != EOF) {
 
-        if (length < 254) {
-            text[length++] = (char)lexer->current_char;
+        if (lexer->current_char == quote) {
+            text[length++] = quote;
+            lexer_advance(lexer);
+            break;
         }
 
+        if (lexer->current_char == '\n') {
+            lexer_advance(lexer);
+
+            if (toupper((unsigned char)lexer->line_indicator) != '-') {
+                invalid = 1;
+                break;
+            }
+
+            while (lexer->current_char != EOF &&
+                   lexer->current_char != '\n' &&
+                   isspace((unsigned char)lexer->current_char)) {
+                lexer_advance(lexer);
+            }
+
+            if (lexer->current_char != quote) {
+                invalid = 1;
+                break;
+            }
+
+            lexer_advance(lexer);
+            continue;
+        }
+
+        if (length >= (int)sizeof(text) - 2) {
+            invalid = 1;
+            break;
+        }
+
+        text[length++] = (char)lexer->current_char;
         lexer_advance(lexer);
     }
 
-    if (lexer->current_char != quote) {
-        token.type = TOK_ERROR;
-    } else {
-        text[length++] = quote;
-        lexer_advance(lexer);
+    if (lexer->current_char == EOF &&
+        (length == 0 || text[length - 1] != quote)) {
+        invalid = 1;
+    }
+
+    if (length == 1 || text[length - 1] != quote) {
+        invalid = 1;
     }
 
     text[length] = '\0';
+
+    if (invalid) {
+        token.type = TOK_ERROR;
+    }
+
     token.lexeme = copy_lexeme(text, (size_t)length);
 
     if (token.lexeme == NULL) {
