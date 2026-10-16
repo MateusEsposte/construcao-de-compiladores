@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 
+
 static char *copy_lexeme(const char *text, size_t length){
     char *copy = malloc(length + 1);
 
