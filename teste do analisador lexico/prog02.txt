@@ -1,0 +1,339 @@
+TOK_IDENTIFICATION        | IDENTIFICATION       |    11 |      8
+TOK_DIVISION              | DIVISION             |    11 |     23
+TOK_PERIOD                | .                    |    11 |     31
+TOK_IDENTIFIER            | PROGRAM-ID           |    12 |      8
+TOK_PERIOD                | .                    |    12 |     18
+TOK_IDENTIFIER            | YOUR-PROGRAM-NAME    |    12 |     20
+TOK_PERIOD                | .                    |    12 |     37
+TOK_DATA                  | DATA                 |    13 |      8
+TOK_DIVISION              | DIVISION             |    13 |     13
+TOK_PERIOD                | .                    |    13 |     21
+TOK_IDENTIFIER            | FILE                 |    14 |      8
+TOK_SECTION               | SECTION              |    14 |     13
+TOK_PERIOD                | .                    |    14 |     20
+TOK_IDENTIFIER            | WORKING-STORAGE      |    15 |      8
+TOK_SECTION               | SECTION              |    15 |     24
+TOK_PERIOD                | .                    |    15 |     31
+TOK_NUMERIC_LITERAL       | 77                   |    16 |     12
+TOK_IDENTIFIER            | WRK-VALOR1           |    16 |     15
+TOK_IDENTIFIER            | PIC                  |    16 |     32
+TOK_NUMERIC_LITERAL       | 9                    |    16 |     36
+TOK_LPAREN                | (                    |    16 |     37
+TOK_NUMERIC_LITERAL       | 10                   |    16 |     38
+TOK_RPAREN                | )                    |    16 |     40
+TOK_IDENTIFIER            | VALUES               |    16 |     42
+TOK_NUMERIC_LITERAL       | 10                   |    16 |     49
+TOK_PERIOD                | .                    |    16 |     51
+TOK_NUMERIC_LITERAL       | 77                   |    17 |     12
+TOK_IDENTIFIER            | WRK-VALOR2           |    17 |     15
+TOK_IDENTIFIER            | PIC                  |    17 |     32
+TOK_NUMERIC_LITERAL       | 9                    |    17 |     36
+TOK_LPAREN                | (                    |    17 |     37
+TOK_NUMERIC_LITERAL       | 10                   |    17 |     38
+TOK_RPAREN                | )                    |    17 |     40
+TOK_IDENTIFIER            | VALUES               |    17 |     42
+TOK_IDENTIFIER            | ZEROS                |    17 |     49
+TOK_PERIOD                | .                    |    17 |     54
+TOK_NUMERIC_LITERAL       | 77                   |    18 |     12
+TOK_IDENTIFIER            | WRK-A                |    18 |     15
+TOK_IDENTIFIER            | PIC                  |    18 |     32
+TOK_NUMERIC_LITERAL       | 9                    |    18 |     36
+TOK_LPAREN                | (                    |    18 |     37
+TOK_NUMERIC_LITERAL       | 2                    |    18 |     38
+TOK_RPAREN                | )                    |    18 |     39
+TOK_IDENTIFIER            | VALUES               |    18 |     41
+TOK_NUMERIC_LITERAL       | 1                    |    18 |     48
+TOK_PERIOD                | .                    |    18 |     49
+TOK_NUMERIC_LITERAL       | 77                   |    19 |     12
+TOK_IDENTIFIER            | WRK-B                |    19 |     15
+TOK_IDENTIFIER            | PIC                  |    19 |     32
+TOK_NUMERIC_LITERAL       | 9                    |    19 |     36
+TOK_LPAREN                | (                    |    19 |     37
+TOK_NUMERIC_LITERAL       | 2                    |    19 |     38
+TOK_RPAREN                | )                    |    19 |     39
+TOK_IDENTIFIER            | VALUES               |    19 |     41
+TOK_NUMERIC_LITERAL       | 1                    |    19 |     48
+TOK_PERIOD                | .                    |    19 |     49
+TOK_NUMERIC_LITERAL       | 77                   |    20 |     12
+TOK_IDENTIFIER            | WRK-C                |    20 |     15
+TOK_IDENTIFIER            | PIC                  |    20 |     32
+TOK_NUMERIC_LITERAL       | 9                    |    20 |     36
+TOK_LPAREN                | (                    |    20 |     37
+TOK_NUMERIC_LITERAL       | 2                    |    20 |     38
+TOK_RPAREN                | )                    |    20 |     39
+TOK_IDENTIFIER            | VALUES               |    20 |     41
+TOK_IDENTIFIER            | ZEROS                |    20 |     48
+TOK_PERIOD                | .                    |    20 |     53
+TOK_NUMERIC_LITERAL       | 01                   |    22 |     12
+TOK_IDENTIFIER            | WRK-TOTAIS           |    22 |     15
+TOK_PERIOD                | .                    |    22 |     25
+TOK_NUMERIC_LITERAL       | 05                   |    23 |     15
+TOK_IDENTIFIER            | WRK-TOTAL            |    23 |     18
+TOK_IDENTIFIER            | PIC                  |    23 |     32
+TOK_NUMERIC_LITERAL       | 9                    |    23 |     36
+TOK_LPAREN                | (                    |    23 |     37
+TOK_NUMERIC_LITERAL       | 10                   |    23 |     38
+TOK_RPAREN                | )                    |    23 |     40
+TOK_IDENTIFIER            | VALUE                |    23 |     42
+TOK_NUMERIC_LITERAL       | 19                   |    23 |     48
+TOK_PERIOD                | .                    |    23 |     50
+TOK_PROCEDURE             | PROCEDURE            |    25 |      8
+TOK_DIVISION              | DIVISION             |    25 |     18
+TOK_PERIOD                | .                    |    25 |     26
+TOK_IDENTIFIER            | MAIN-PROCEDURE       |    26 |      8
+TOK_PERIOD                | .                    |    26 |     22
+TOK_DISPLAY               | DISPLAY              |    27 |     12
+TOK_ALPHANUMERIC_LITERAL  | "===== start =======" |    27 |     20
+TOK_PERIOD                | .                    |    27 |     41
+TOK_MOVE                  | MOVE                 |    28 |     12
+TOK_NUMERIC_LITERAL       | 20                   |    28 |     17
+TOK_IDENTIFIER            | TO                   |    28 |     20
+TOK_IDENTIFIER            | WRK-VALOR2           |    28 |     23
+TOK_PERIOD                | .                    |    28 |     33
+TOK_DISPLAY               | DISPLAY              |    29 |     12
+TOK_ALPHANUMERIC_LITERAL  | "MOVE 20 TO WRK-VALOR2 -->" |    29 |     20
+TOK_IDENTIFIER            | WRK-VALOR2           |    29 |     48
+TOK_PERIOD                | .                    |    29 |     58
+TOK_MOVE                  | MOVE                 |    31 |     12
+TOK_IDENTIFIER            | WRK-VALOR1           |    31 |     17
+TOK_IDENTIFIER            | TO                   |    31 |     28
+TOK_IDENTIFIER            | WRK-VALOR2           |    31 |     31
+TOK_PERIOD                | .                    |    31 |     41
+TOK_DISPLAY               | DISPLAY              |    32 |     12
+TOK_ALPHANUMERIC_LITERAL  | "MOVE WRK-VALOR1 TO WRK-VALOR2 -->" |    32 |     20
+TOK_IDENTIFIER            | WRK-VALOR2           |    32 |     56
+TOK_PERIOD                | .                    |    32 |     66
+TOK_MOVE                  | MOVE                 |    34 |     12
+TOK_NUMERIC_LITERAL       | 70                   |    34 |     17
+TOK_IDENTIFIER            | TO                   |    34 |     20
+TOK_IDENTIFIER            | WRK-VALOR1           |    34 |     23
+TOK_IDENTIFIER            | WRK-VALOR2           |    34 |     34
+TOK_PERIOD                | .                    |    34 |     44
+TOK_DISPLAY               | DISPLAY              |    35 |     12
+TOK_ALPHANUMERIC_LITERAL  | "MOVE 70 TO WRK-VALOR1 WRK-VALOR2 -->" |    35 |     20
+TOK_IDENTIFIER            | WRK-VALOR2           |    35 |     59
+TOK_PERIOD                | .                    |    35 |     69
+TOK_MOVE                  | MOVE                 |    37 |     12
+TOK_IDENTIFIER            | WRK-TOTAL            |    37 |     17
+TOK_IDENTIFIER            | OF                   |    37 |     27
+TOK_IDENTIFIER            | WRK-TOTAIS           |    37 |     30
+TOK_IDENTIFIER            | TO                   |    37 |     41
+TOK_IDENTIFIER            | WRK-VALOR2           |    37 |     44
+TOK_PERIOD                | .                    |    37 |     54
+TOK_DISPLAY               | DISPLAY              |    38 |     12
+TOK_ALPHANUMERIC_LITERAL  | "MOVE WRK-TOTAL OF WRK-TOTAIS TO WRK-VALOR2. -->" |    38 |     20
+TOK_IDENTIFIER            | WRK-VALOR2           |    39 |     22
+TOK_PERIOD                | .                    |    39 |     32
+TOK_DISPLAY               | DISPLAY              |    41 |     12
+TOK_ALPHANUMERIC_LITERAL  | "--------"           |    41 |     20
+TOK_PERIOD                | .                    |    41 |     30
+TOK_DISPLAY               | DISPLAY              |    42 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A = 1, B = 1, C = 1" |    42 |     20
+TOK_PERIOD                | .                    |    42 |     41
+TOK_DISPLAY               | DISPLAY              |    44 |     12
+TOK_ALPHANUMERIC_LITERAL  | " "                  |    44 |     20
+TOK_PERIOD                | .                    |    44 |     23
+TOK_IDENTIFIER            | ADD                  |    45 |     12
+TOK_NUMERIC_LITERAL       | 1                    |    45 |     16
+TOK_NUMERIC_LITERAL       | 1                    |    45 |     18
+TOK_IDENTIFIER            | TO                   |    45 |     20
+TOK_IDENTIFIER            | WRK-A                |    45 |     23
+TOK_PERIOD                | .                    |    45 |     28
+TOK_DISPLAY               | DISPLAY              |    46 |     12
+TOK_ALPHANUMERIC_LITERAL  | "ADD B C TO A (A = B + C + A) -->" |    46 |     20
+TOK_IDENTIFIER            | WRK-A                |    46 |     55
+TOK_PERIOD                | .                    |    46 |     60
+TOK_MOVE                  | MOVE                 |    48 |     12
+TOK_NUMERIC_LITERAL       | 1                    |    48 |     17
+TOK_IDENTIFIER            | TO                   |    48 |     19
+TOK_IDENTIFIER            | WRK-A                |    48 |     22
+TOK_PERIOD                | .                    |    48 |     27
+TOK_IDENTIFIER            | ADD                  |    49 |     12
+TOK_NUMERIC_LITERAL       | 1                    |    49 |     16
+TOK_IDENTIFIER            | TO                   |    49 |     18
+TOK_IDENTIFIER            | WRK-A                |    49 |     21
+TOK_IDENTIFIER            | WRK-B                |    49 |     27
+TOK_PERIOD                | .                    |    49 |     32
+TOK_DISPLAY               | DISPLAY              |    50 |     12
+TOK_ALPHANUMERIC_LITERAL  | " "                  |    50 |     20
+TOK_PERIOD                | .                    |    50 |     23
+TOK_DISPLAY               | DISPLAY              |    51 |     12
+TOK_ALPHANUMERIC_LITERAL  | "ADD 1 TO A B (A = A + 1; B = B + 1) -->" |    51 |     20
+TOK_DISPLAY               | DISPLAY              |    52 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= "                |    52 |     20
+TOK_IDENTIFIER            | WRK-A                |    52 |     26
+TOK_ALPHANUMERIC_LITERAL  | " , B= "             |    52 |     32
+TOK_IDENTIFIER            | WRK-B                |    52 |     41
+TOK_PERIOD                | .                    |    52 |     46
+TOK_DISPLAY               | DISPLAY              |    54 |     12
+TOK_ALPHANUMERIC_LITERAL  | " "                  |    54 |     20
+TOK_PERIOD                | .                    |    54 |     23
+TOK_IDENTIFIER            | ADD                  |    55 |     12
+TOK_NUMERIC_LITERAL       | 1                    |    55 |     16
+TOK_NUMERIC_LITERAL       | 1                    |    55 |     18
+TOK_IDENTIFIER            | GIVING               |    55 |     20
+TOK_IDENTIFIER            | WRK-A                |    55 |     27
+TOK_PERIOD                | .                    |    55 |     32
+TOK_DISPLAY               | DISPLAY              |    56 |     12
+TOK_ALPHANUMERIC_LITERAL  | "ADD B C GIVING A (A = B + C) -->" |    56 |     20
+TOK_IDENTIFIER            | WRK-A                |    56 |     55
+TOK_PERIOD                | .                    |    56 |     60
+TOK_DISPLAY               | DISPLAY              |    58 |     12
+TOK_ALPHANUMERIC_LITERAL  | "============ SUBTRACT ============= " |    58 |     20
+TOK_PERIOD                | .                    |    58 |     58
+TOK_MOVE                  | MOVE                 |    59 |     12
+TOK_NUMERIC_LITERAL       | 99                   |    59 |     17
+TOK_IDENTIFIER            | TO                   |    59 |     20
+TOK_IDENTIFIER            | WRK-A                |    59 |     23
+TOK_PERIOD                | .                    |    59 |     28
+TOK_MOVE                  | MOVE                 |    60 |     12
+TOK_NUMERIC_LITERAL       | 0                    |    60 |     17
+TOK_IDENTIFIER            | TO                   |    60 |     19
+TOK_IDENTIFIER            | WRK-B                |    60 |     22
+TOK_PERIOD                | .                    |    60 |     27
+TOK_DISPLAY               | DISPLAY              |    61 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= 99, B= 0"        |    61 |     20
+TOK_PERIOD                | .                    |    61 |     33
+TOK_IDENTIFIER            | SUBTRACT             |    62 |     12
+TOK_NUMERIC_LITERAL       | 30                   |    62 |     21
+TOK_NUMERIC_LITERAL       | 23                   |    62 |     24
+TOK_IDENTIFIER            | FROM                 |    62 |     27
+TOK_IDENTIFIER            | WRK-A                |    62 |     32
+TOK_IDENTIFIER            | GIVING               |    63 |     27
+TOK_IDENTIFIER            | WRK-B                |    63 |     34
+TOK_PERIOD                | .                    |    63 |     39
+TOK_DISPLAY               | DISPLAY              |    64 |     12
+TOK_ALPHANUMERIC_LITERAL  | "SUBTRACT 30 23 FROM A GIVING B.-->" |    64 |     20
+TOK_DISPLAY               | DISPLAY              |    65 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= "                |    65 |     20
+TOK_IDENTIFIER            | WRK-A                |    65 |     26
+TOK_ALPHANUMERIC_LITERAL  | " , B= "             |    65 |     32
+TOK_IDENTIFIER            | WRK-B                |    65 |     41
+TOK_PERIOD                | .                    |    65 |     46
+TOK_DISPLAY               | DISPLAY              |    67 |     12
+TOK_ALPHANUMERIC_LITERAL  | "============ MULTIPLY ============= " |    67 |     20
+TOK_PERIOD                | .                    |    67 |     58
+TOK_MOVE                  | MOVE                 |    68 |     12
+TOK_NUMERIC_LITERAL       | 40                   |    68 |     17
+TOK_IDENTIFIER            | TO                   |    68 |     20
+TOK_IDENTIFIER            | WRK-A                |    68 |     23
+TOK_PERIOD                | .                    |    68 |     28
+TOK_MOVE                  | MOVE                 |    69 |     12
+TOK_NUMERIC_LITERAL       | 0                    |    69 |     17
+TOK_IDENTIFIER            | TO                   |    69 |     19
+TOK_IDENTIFIER            | WRK-B                |    69 |     22
+TOK_PERIOD                | .                    |    69 |     27
+TOK_DISPLAY               | DISPLAY              |    70 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= 40, B= 0"        |    70 |     20
+TOK_PERIOD                | .                    |    70 |     33
+TOK_IDENTIFIER            | MULTIPLY             |    71 |     12
+TOK_NUMERIC_LITERAL       | 2                    |    71 |     21
+TOK_IDENTIFIER            | BY                   |    71 |     23
+TOK_IDENTIFIER            | WRK-A                |    71 |     26
+TOK_PERIOD                | .                    |    71 |     31
+TOK_DISPLAY               | DISPLAY              |    72 |     12
+TOK_ALPHANUMERIC_LITERAL  | "MULTIPLY A BY 2 -->" |    72 |     20
+TOK_DISPLAY               | DISPLAY              |    73 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= "                |    73 |     20
+TOK_IDENTIFIER            | WRK-A                |    73 |     26
+TOK_ALPHANUMERIC_LITERAL  | " , B= "             |    73 |     32
+TOK_IDENTIFIER            | WRK-B                |    73 |     41
+TOK_PERIOD                | .                    |    73 |     46
+TOK_DISPLAY               | DISPLAY              |    75 |     12
+TOK_ALPHANUMERIC_LITERAL  | "============ MULTIPLY ============= " |    75 |     20
+TOK_PERIOD                | .                    |    75 |     58
+TOK_MOVE                  | MOVE                 |    76 |     12
+TOK_NUMERIC_LITERAL       | 40                   |    76 |     17
+TOK_IDENTIFIER            | TO                   |    76 |     20
+TOK_IDENTIFIER            | WRK-A                |    76 |     23
+TOK_PERIOD                | .                    |    76 |     28
+TOK_MOVE                  | MOVE                 |    77 |     12
+TOK_NUMERIC_LITERAL       | 0                    |    77 |     17
+TOK_IDENTIFIER            | TO                   |    77 |     19
+TOK_IDENTIFIER            | WRK-B                |    77 |     22
+TOK_PERIOD                | .                    |    77 |     27
+TOK_DISPLAY               | DISPLAY              |    78 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= 40, B= 0"        |    78 |     20
+TOK_PERIOD                | .                    |    78 |     33
+TOK_IDENTIFIER            | MULTIPLY             |    79 |     12
+TOK_NUMERIC_LITERAL       | 2                    |    79 |     21
+TOK_IDENTIFIER            | BY                   |    79 |     23
+TOK_IDENTIFIER            | WRK-A                |    79 |     26
+TOK_IDENTIFIER            | GIVING               |    79 |     32
+TOK_IDENTIFIER            | WRK-B                |    79 |     39
+TOK_PERIOD                | .                    |    79 |     44
+TOK_DISPLAY               | DISPLAY              |    80 |     12
+TOK_ALPHANUMERIC_LITERAL  | "MULTIPLY A BY 2 GIVING B.-->" |    80 |     20
+TOK_DISPLAY               | DISPLAY              |    81 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= "                |    81 |     20
+TOK_IDENTIFIER            | WRK-A                |    81 |     26
+TOK_ALPHANUMERIC_LITERAL  | " , B= "             |    81 |     32
+TOK_IDENTIFIER            | WRK-B                |    81 |     41
+TOK_PERIOD                | .                    |    81 |     46
+TOK_DISPLAY               | DISPLAY              |    83 |     12
+TOK_ALPHANUMERIC_LITERAL  | "============ DIVIDE =============" |    83 |     20
+TOK_PERIOD                | .                    |    83 |     55
+TOK_MOVE                  | MOVE                 |    84 |     12
+TOK_NUMERIC_LITERAL       | 81                   |    84 |     17
+TOK_IDENTIFIER            | TO                   |    84 |     20
+TOK_IDENTIFIER            | WRK-A                |    84 |     23
+TOK_PERIOD                | .                    |    84 |     28
+TOK_MOVE                  | MOVE                 |    85 |     12
+TOK_NUMERIC_LITERAL       | 0                    |    85 |     17
+TOK_IDENTIFIER            | TO                   |    85 |     19
+TOK_IDENTIFIER            | WRK-B                |    85 |     22
+TOK_PERIOD                | .                    |    85 |     27
+TOK_MOVE                  | MOVE                 |    86 |     12
+TOK_NUMERIC_LITERAL       | 0                    |    86 |     17
+TOK_IDENTIFIER            | TO                   |    86 |     19
+TOK_IDENTIFIER            | WRK-C                |    86 |     22
+TOK_PERIOD                | .                    |    86 |     27
+TOK_DISPLAY               | DISPLAY              |    87 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= 80, B= 0"        |    87 |     20
+TOK_PERIOD                | .                    |    87 |     33
+TOK_IDENTIFIER            | DIVIDE               |    88 |     12
+TOK_IDENTIFIER            | WRK-A                |    88 |     19
+TOK_IDENTIFIER            | BY                   |    88 |     25
+TOK_NUMERIC_LITERAL       | 2                    |    88 |     28
+TOK_IDENTIFIER            | GIVING               |    88 |     30
+TOK_IDENTIFIER            | WRK-B                |    88 |     37
+TOK_IDENTIFIER            | REMAINDER            |    88 |     43
+TOK_IDENTIFIER            | WRK-C                |    88 |     53
+TOK_PERIOD                | .                    |    88 |     58
+TOK_DISPLAY               | DISPLAY              |    89 |     12
+TOK_ALPHANUMERIC_LITERAL  | "DIVIDE A BY 2 GIVING B REMAINDER C .-->" |    89 |     20
+TOK_DISPLAY               | DISPLAY              |    90 |     12
+TOK_ALPHANUMERIC_LITERAL  | "A= "                |    90 |     20
+TOK_IDENTIFIER            | WRK-A                |    90 |     26
+TOK_ALPHANUMERIC_LITERAL  | " , B= "             |    90 |     32
+TOK_IDENTIFIER            | WRK-B                |    90 |     41
+TOK_ALPHANUMERIC_LITERAL  | " , C= "             |    90 |     47
+TOK_IDENTIFIER            | WRK-C                |    90 |     56
+TOK_PERIOD                | .                    |    90 |     61
+TOK_DISPLAY               | DISPLAY              |    93 |     12
+TOK_ALPHANUMERIC_LITERAL  | " "                  |    93 |     20
+TOK_PERIOD                | .                    |    93 |     23
+TOK_MOVE                  | MOVE                 |    94 |     12
+TOK_NUMERIC_LITERAL       | 99                   |    94 |     17
+TOK_IDENTIFIER            | TO                   |    94 |     20
+TOK_IDENTIFIER            | WRK-A                |    94 |     23
+TOK_PERIOD                | .                    |    94 |     28
+TOK_IDENTIFIER            | ADD                  |    95 |     12
+TOK_NUMERIC_LITERAL       | 1                    |    95 |     16
+TOK_IDENTIFIER            | TO                   |    95 |     18
+TOK_IDENTIFIER            | WRK-A                |    95 |     21
+TOK_IDENTIFIER            | ON                   |    96 |     12
+TOK_IDENTIFIER            | SIZE                 |    96 |     15
+TOK_IDENTIFIER            | ERROR                |    96 |     20
+TOK_DISPLAY               | DISPLAY              |    97 |     15
+TOK_ALPHANUMERIC_LITERAL  | "ON SIZE ERROR -->"  |    97 |     23
+TOK_IDENTIFIER            | WRK-A                |    97 |     43
+TOK_PERIOD                | .                    |    97 |     48
+TOK_STOP                  | STOP                 |    99 |     13
+TOK_RUN                   | RUN                  |    99 |     18
+TOK_PERIOD                | .                    |    99 |     21
+TOK_IDENTIFIER            | END                  |   100 |      8
+TOK_IDENTIFIER            | PROGRAM              |   100 |     12
+TOK_IDENTIFIER            | YOUR-PROGRAM-NAME    |   100 |     20
+TOK_PERIOD                | .                    |   100 |     37
+TOK_EOF                   | (vazio)              |   101 |      1
