@@ -64,7 +64,7 @@ identificadores e números longos.
 
 Os sete arquivos listados no
 [repositório ebasso/cobol-exemplos](https://github.com/ebasso/cobol-exemplos)
-foram executados com o lexer (revisão `dbe15b74769c994ceda82b48b2640fb208907d3c`).
+foram executados com o lexer.
 Todos terminaram com código de saída `0` e nenhum `TOK_ERROR`:
 
 | Arquivo | Erros léxicos |
