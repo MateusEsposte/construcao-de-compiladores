@@ -22,8 +22,7 @@ coluna 7 como indicador e analisa o texto das colunas 8–72. Linhas de
 comentário com `*` ou `/` e linhas de depuração com `D` são ignoradas. O
 indicador `-` é reconhecido na continuação de literais.
 
-As categorias e regras básicas seguem a `EspecificacaoCOBOL.pdf` na raiz do
-repositório: palavras reservadas, identificadores de até 30 caracteres,
+As categorias e regras básicas seguem a especificação do COBOL fornecida para o projeto: palavras reservadas, identificadores de até 30 caracteres,
 literais numéricos com sinal e decimal, literais alfanuméricos e pontuação.
 Foram acrescentados tokens para palavras reservadas encontradas nos exemplos,
 operadores aritméticos e relacionais e o separador `:`.
