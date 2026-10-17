@@ -10,6 +10,7 @@ typedef struct {
     int line;
     int column;
     int line_indicator;
+    int can_start_signed_number;
 } Lexer;
 
 void lexer_init(Lexer *lexer, FILE *file);
