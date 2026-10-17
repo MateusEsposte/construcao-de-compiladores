@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 
-
 static char *copy_lexeme(const char *text, size_t length){
     char *copy = malloc(length + 1);
 
@@ -358,6 +357,29 @@ static Token read_invalid_signed_word(Lexer *lexer)
 }
 
 
+
+static int digit_sequence_continues_identifier(Lexer *lexer)
+{
+    fpos_t position;
+
+    if (fgetpos(lexer->file, &position) != 0) {
+        return 0;
+    }
+
+    int c;
+
+    do {
+        c = fgetc(lexer->file);
+    } while (isdigit((unsigned char)c));
+
+    int result = (c == '-' || isalpha((unsigned char)c));
+
+    fsetpos(lexer->file, &position);
+
+    return result;
+}
+
+
 Token lexer_next_token(Lexer *lexer){
     Token token;
 
@@ -384,6 +406,10 @@ Token lexer_next_token(Lexer *lexer){
     }
 
     if (isdigit(lexer->current_char)) {
+        if (digit_sequence_continues_identifier(lexer)) {
+            return read_word(lexer);
+        }
+
         return read_number(lexer);
     }
 
