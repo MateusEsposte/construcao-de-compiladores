@@ -1,21 +1,11 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "lexer.h"
+#include "parser.h"
 
-int main(int argc, char *argv[])
+static int print_tokens(FILE *file)
 {
-    if (argc > 2) {
-        fprintf(stderr, "Uso: %s [arquivo.cob]\n", argv[0]);
-        return 2;
-    }
-
-    const char *filename = argc == 2 ? argv[1] : "teste.cob";
-    FILE *file = fopen(filename, "r");
-
-    if (file == NULL) {
-        perror(filename);
-        return 1;
-    }
-
     Lexer lexer;
     lexer_init(&lexer, file);
 
@@ -24,7 +14,6 @@ int main(int argc, char *argv[])
 
     do {
         token = lexer_next_token(&lexer);
-
         if (token.type == TOK_ERROR) {
             had_errors = 1;
         }
@@ -36,12 +25,37 @@ int main(int argc, char *argv[])
             token.line,
             token.column
         );
-
         token_free(&token);
-
     } while (token.type != TOK_EOF);
 
+    return had_errors ? 1 : 0;
+}
+
+int main(int argc, char *argv[])
+{
+    int tokens_only = argc > 1 && strcmp(argv[1], "--tokens") == 0;
+    if ((!tokens_only && argc > 2) || (tokens_only && argc > 3)) {
+        fprintf(stderr, "Uso: %s [--tokens] [arquivo.cob]\n", argv[0]);
+        return 2;
+    }
+
+    const char *filename = tokens_only
+                         ? (argc == 3 ? argv[2] : "teste.cob")
+                         : (argc == 2 ? argv[1] : "teste.cob");
+    FILE *file = fopen(filename, "r");
+
+    if (file == NULL) {
+        perror(filename);
+        return 1;
+    }
+
+    int result = tokens_only
+               ? print_tokens(file)
+               : (parser_parse(file, stderr) ? 0 : 1);
     fclose(file);
 
-    return had_errors ? 1 : 0;
+    if (!tokens_only && result == 0) {
+        puts("Analise sintatica concluida sem erros.");
+    }
+    return result;
 }

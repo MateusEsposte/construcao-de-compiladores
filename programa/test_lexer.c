@@ -210,6 +210,33 @@ int main(void)
         identifier_length,
         sizeof(identifier_length) / sizeof(identifier_length[0]));
 
+    static const ExpectedToken numeric_prefix[] = {
+        {TOK_NUMERIC_LITERAL, "77"},
+        {TOK_IDENTIFIER, "WRK-A"},
+        {TOK_PIC, "PIC"},
+        {TOK_NUMERIC_LITERAL, "9"},
+        {TOK_LPAREN, "("},
+        {TOK_NUMERIC_LITERAL, "2"},
+        {TOK_RPAREN, ")"},
+        {TOK_VALUE, "VALUE"},
+        {TOK_NUMERIC_LITERAL, "10"},
+        {TOK_PERIOD, "."},
+        {TOK_IDENTIFIER, "00001-PARA"},
+        {TOK_PERIOD, "."},
+        {TOK_MOVE, "MOVE"},
+        {TOK_NUMERIC_LITERAL, "0"},
+        {TOK_TO, "TO"},
+        {TOK_IDENTIFIER, "WRK-A"},
+        {TOK_PERIOD, "."}
+    };
+    failures += test_source(
+        "numeros e identificadores iniciados por digitos",
+        "       77 WRK-A PIC 9(2) VALUE 10.\n"
+        "       00001-PARA.\n"
+        "           MOVE 0 TO WRK-A.\n",
+        numeric_prefix,
+        sizeof(numeric_prefix) / sizeof(numeric_prefix[0]));
+
     char long_number_source[74];
     char long_number_expected[66];
     long_number_expected[0] = '+';

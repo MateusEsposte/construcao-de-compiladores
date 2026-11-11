@@ -398,6 +398,28 @@ static Token read_number(Lexer *lexer){
         }
     }
 
+    if (lexer->current_char == '-' || lexer->current_char == '_') {
+        while (is_word_char(lexer->current_char)) {
+            if (!allocation_failed &&
+                !append_char(&number, &length, &capacity,
+                             lexer->current_char)) {
+                allocation_failed = 1;
+            }
+            lexer_advance(lexer);
+        }
+
+        if (!allocation_failed) {
+            if (length == 0 || number[length - 1] == '-' ||
+                number[length - 1] == '_' || length > 30) {
+                token.type = TOK_ERROR;
+            } else {
+                token.type = keyword_type(number);
+            }
+        } else {
+            token.type = TOK_ERROR;
+        }
+    }
+
     if (!has_digit || allocation_failed) {
         token.type = TOK_ERROR;
     }
@@ -529,31 +551,6 @@ static Token read_string(Lexer *lexer)
 }
 
 
-static int digit_sequence_continues_identifier(Lexer *lexer)
-{
-    fpos_t position;
-
-    if (fgetpos(lexer->file, &position) != 0) {
-        return 0;
-    }
-
-    int column = lexer->column + 1;
-    int c = fgetc(lexer->file);
-
-    while (is_digit(c) && column < 72) {
-        c = fgetc(lexer->file);
-        column++;
-    }
-
-    int result = column <= 72 && c == '-';
-
-    if (fsetpos(lexer->file, &position) != 0) {
-        return 0;
-    }
-
-    return result;
-}
-
 static int peek_next_char(Lexer *lexer){
     if (lexer->column >= 72) {
         return EOF;
@@ -642,10 +639,6 @@ Token lexer_next_token(Lexer *lexer){
     }
 
     if (is_digit(lexer->current_char)) {
-        if (digit_sequence_continues_identifier(lexer)) {
-            return finish_token(lexer, read_word(lexer));
-        }
-
         return finish_token(lexer, read_number(lexer));
     }
 
