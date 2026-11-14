@@ -1,0 +1,10 @@
+       DISPLAY "Caso 1" @.
+       DISPLAY "Caso 2" #.
+       DISPLAY "Caso 3" $.
+       DISPLAY "Caso 4" ?.
+       DISPLAY "Caso 5" !.
+       DISPLAY "Caso 6" _.
+       MOVE 1 TO BAD-.
+       MOVE 1 TO BAD_.
+       MOVE 1 TO ABCDEFGHIJKLMNOPQRSTUVWXYZ12345.
+       DISPLAY "LITERAL SEM FECHAMENTO
