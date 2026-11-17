@@ -160,6 +160,39 @@ int main(void)
         "       DISPLAY \"a\"\"b\" 'c''d'.\n",
         literals, sizeof(literals) / sizeof(literals[0]));
 
+    char continued_literal[60];
+    continued_literal[0] = '\'';
+    continued_literal[1] = 'A';
+    memset(continued_literal + 2, ' ', 55);
+    continued_literal[57] = 'B';
+    continued_literal[58] = '\'';
+    continued_literal[59] = '\0';
+
+    const ExpectedToken continued_tokens[] = {
+        {TOK_DISPLAY, "DISPLAY"},
+        {TOK_ALPHANUMERIC_LITERAL, continued_literal},
+        {TOK_PERIOD, "."}
+    };
+    failures += test_source(
+        "literal continuado com preenchimento ate a coluna 72",
+        "       DISPLAY 'A\n"
+        "      -    'B'.\n",
+        continued_tokens,
+        sizeof(continued_tokens) / sizeof(continued_tokens[0]));
+
+    char end_column_source[96];
+    memset(end_column_source, ' ', 71);
+    end_column_source[71] = '\'';
+    strcpy(end_column_source + 72, "\n      -    'X'\n");
+    static const ExpectedToken end_column_literal[] = {
+        {TOK_ALPHANUMERIC_LITERAL, "'X'"}
+    };
+    failures += test_source(
+        "literal iniciado na coluna 72 e continuado",
+        end_column_source,
+        end_column_literal,
+        sizeof(end_column_literal) / sizeof(end_column_literal[0]));
+
     static const ExpectedToken punctuation[] = {
         {TOK_IDENTIFIER, "A"},
         {TOK_COLON, ":"},
@@ -190,12 +223,18 @@ int main(void)
     static const ExpectedToken identifier_extensions[] = {
         {TOK_ERROR, "_"},
         {TOK_KEYWORD, "STRING"},
+        {TOK_KEYWORD, "COPY"},
+        {TOK_KEYWORD, "EXIT"},
+        {TOK_KEYWORD, "CONTINUE"},
+        {TOK_KEYWORD, "INITIALIZE"},
+        {TOK_KEYWORD, "GOBACK"},
         {TOK_IDENTIFIER, "PROG005_strings"},
         {TOK_ERROR, "A_"}
     };
     failures += test_source(
         "extensao de sublinhado do corpus e limites do identificador",
-        "       _STRING PROG005_strings A_\n",
+        "       _STRING COPY EXIT CONTINUE INITIALIZE "
+        "GOBACK PROG005_strings A_\n",
         identifier_extensions,
         sizeof(identifier_extensions) / sizeof(identifier_extensions[0]));
 

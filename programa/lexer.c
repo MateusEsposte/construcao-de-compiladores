@@ -268,7 +268,16 @@ static TokenType keyword_type(const char *word){
         {"SPECIAL-NAMES", TOK_KEYWORD},
         {"I-O-CONTROL", TOK_KEYWORD},
         {"SCREEN", TOK_KEYWORD},
-        {"STRING", TOK_KEYWORD}
+        {"STRING", TOK_KEYWORD},
+        {"COPY", TOK_KEYWORD},
+        {"EXIT", TOK_KEYWORD},
+        {"CONTINUE", TOK_KEYWORD},
+        {"INITIALIZE", TOK_KEYWORD},
+        {"COMP", TOK_KEYWORD},
+        {"GO", TOK_KEYWORD},
+        {"END-PERFORM", TOK_KEYWORD},
+        {"CALL", TOK_KEYWORD},
+        {"GOBACK", TOK_KEYWORD}
     };
 
     char upper[31];
@@ -441,6 +450,47 @@ static Token read_number(Lexer *lexer){
     return token;
 }
 
+static int advance_string(Lexer *lexer, char quote, char **text,
+                          size_t *length, size_t *capacity,
+                          int *allocation_failed)
+{
+    int previous_line = lexer->line;
+    int previous_column = lexer->column;
+    if (lexer->current_char == '\n' && previous_column > 1) {
+        previous_column--;
+    }
+
+    lexer_advance(lexer);
+    if (lexer->line == previous_line) {
+        return 1;
+    }
+
+    if (toupper((unsigned char)lexer->line_indicator) != '-') {
+        return 0;
+    }
+
+    for (int column = previous_column + 1; column <= 72; column++) {
+        if (!*allocation_failed &&
+            !append_char(text, length, capacity, ' ')) {
+            *allocation_failed = 1;
+        }
+    }
+
+    while (lexer->current_char != EOF &&
+           lexer->current_char != '\n' &&
+           lexer->column <= 72 &&
+           isspace((unsigned char)lexer->current_char)) {
+        lexer_advance(lexer);
+    }
+
+    if (lexer->current_char != quote) {
+        return 0;
+    }
+
+    lexer_advance(lexer);
+    return 1;
+}
+
 
 static Token read_string(Lexer *lexer)
 {
@@ -461,9 +511,12 @@ static Token read_string(Lexer *lexer)
     if (!append_char(&text, &length, &capacity, quote)) {
         allocation_failed = 1;
     }
-    lexer_advance(lexer);
+    if (!advance_string(lexer, quote, &text, &length, &capacity,
+                        &allocation_failed)) {
+        invalid = 1;
+    }
 
-    while (lexer->current_char != EOF) {
+    while (!invalid && lexer->current_char != EOF) {
 
         if (lexer->current_char == quote) {
             int next_char = lexer->column < 72
@@ -480,8 +533,13 @@ static Token read_string(Lexer *lexer)
                      !append_char(&text, &length, &capacity, quote))) {
                     allocation_failed = 1;
                 }
-                lexer_advance(lexer);
-                lexer_advance(lexer);
+                if (!advance_string(lexer, quote, &text, &length, &capacity,
+                                    &allocation_failed) ||
+                    !advance_string(lexer, quote, &text, &length, &capacity,
+                                    &allocation_failed)) {
+                    invalid = 1;
+                    break;
+                }
                 continue;
             }
 
@@ -494,25 +552,11 @@ static Token read_string(Lexer *lexer)
         }
 
         if (lexer->current_char == '\n') {
-            lexer_advance(lexer);
-
-            if (toupper((unsigned char)lexer->line_indicator) != '-') {
+            if (!advance_string(lexer, quote, &text, &length, &capacity,
+                                &allocation_failed)) {
                 invalid = 1;
                 break;
             }
-
-            while (lexer->current_char != EOF &&
-                   lexer->current_char != '\n' &&
-                   isspace((unsigned char)lexer->current_char)) {
-                lexer_advance(lexer);
-            }
-
-            if (lexer->current_char != quote) {
-                invalid = 1;
-                break;
-            }
-
-            lexer_advance(lexer);
             continue;
         }
 
@@ -521,7 +565,11 @@ static Token read_string(Lexer *lexer)
             allocation_failed = 1;
         }
 
-        lexer_advance(lexer);
+        if (!advance_string(lexer, quote, &text, &length, &capacity,
+                            &allocation_failed)) {
+            invalid = 1;
+            break;
+        }
     }
 
     if (!allocation_failed && lexer->current_char == EOF &&
