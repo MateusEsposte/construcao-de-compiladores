@@ -196,6 +196,31 @@ int main(void)
 
     failures += parse_source(
         "       IDENTIFICATION DIVISION.\n"
+        "       PROGRAM-ID. READ-ELSE-TEST.\n"
+        "       PROCEDURE DIVISION.\n"
+        "           IF STATUS-FLAG = 0\n"
+        "               READ INPUT-FILE INTO RECORD-AREA\n"
+        "           ELSE\n"
+        "               IF STATUS-FLAG = 35\n"
+        "                   IF STATUS-FLAG = 0\n"
+        "                       CONTINUE\n"
+        "                   ELSE\n"
+        "                       CONTINUE\n"
+        "               ELSE\n"
+        "                   CONTINUE.\n",
+        1);
+
+    failures += parse_source(
+        "       IDENTIFICATION DIVISION.\n"
+        "       PROGRAM-ID. READ-KEY-TEST.\n"
+        "       PROCEDURE DIVISION.\n"
+        "           READ INPUT-FILE RECORD KEY RECORD-KEY\n"
+        "               INVALID KEY DISPLAY \"NOT FOUND\"\n"
+        "               NOT INVALID KEY DISPLAY \"FOUND\".\n",
+        1);
+
+    failures += parse_source(
+        "       IDENTIFICATION DIVISION.\n"
         "       PROGRAM-ID. INITIALIZE-TEST.\n"
         "       DATA DIVISION.\n"
         "       WORKING-STORAGE SECTION.\n"
