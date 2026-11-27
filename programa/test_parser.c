@@ -270,6 +270,14 @@ int main(void)
 
     failures += parse_source(
         "       IDENTIFICATION DIVISION.\n"
+        "       PROGRAM-ID. FUNCTION-TEST.\n"
+        "       PROCEDURE DIVISION.\n"
+        "           COMPUTE REMAINDER-VALUE = FUNCTION MOD(TOTAL, 11).\n"
+        "           STOP RUN.\n",
+        1);
+
+    failures += parse_source(
+        "       IDENTIFICATION DIVISION.\n"
         "       PROGRAM-ID. DATA-TEST.\n"
         "       DATA DIVISION.\n"
         "       WORKING-STORAGE SECTION.\n"
@@ -348,6 +356,84 @@ int main(void)
         "           DISPLAY \"missing period\"\n"
         "       SECOND-PARAGRAPH.\n"
         "           STOP RUN.\n",
+        0);
+
+    failures += parse_source(
+        "       IDENTIFICATION DIVISION.\n"
+        "       PROGRAM-ID. PROCEDURE-FEATURES.\n"
+        "       DATA DIVISION.\n"
+        "       WORKING-STORAGE SECTION.\n"
+        "       01 INDEX-VALUE PIC 9.\n"
+        "       01 VALUE-A PIC 9(3).\n"
+        "       01 TEXT-VALUE PIC X(10).\n"
+        "       01 ARG-VALUE PIC 9.\n"
+        "       PROCEDURE DIVISION.\n"
+        "           ACCEPT DATE-FIELD FROM DATE YYYYMMDD.\n"
+        "           DIVIDE 2 INTO VALUE-A.\n"
+        "           COMPUTE VALUE-A ROUNDED = VALUE-A + 1.\n"
+        "           IF VALUE-A > 0 THEN DISPLAY \"OK\" END-IF.\n"
+        "           PERFORM UNTIL VALUE-A > 2\n"
+        "               EXIT PERFORM\n"
+        "           END-PERFORM.\n"
+        "           CALL \"SUB\" USING BY VALUE 1 BY REFERENCE ARG-VALUE.\n"
+        "           OPEN INPUT INPUT-A INPUT INPUT-B OUTPUT OUTPUT-A.\n"
+        "           SORT SORT-FILE ON ASCENDING KEY VALUE-A\n"
+        "               USING INPUT-A GIVING OUTPUT-A.\n"
+        "           UNSTRING TEXT-VALUE DELIMITED BY ALL \"|\"\n"
+        "               INTO ARG-VALUE ARG-VALUE END-UNSTRING.\n"
+        "           WRITE RECORD-A INVALID KEY DISPLAY \"NO\"\n"
+        "               NOT INVALID KEY DISPLAY \"YES\" END-WRITE.\n"
+        "           STOP RUN.\n",
+        1);
+
+    failures += parse_source(
+        "       IDENTIFICATION DIVISION.\n"
+        "       PROGRAM-ID. DATA-FEATURES.\n"
+        "       ENVIRONMENT DIVISION.\n"
+        "       CONFIGURATION SECTION.\n"
+        "       SPECIAL-NAMES.\n"
+        "           DECIMAL-POINT IS COMMA.\n"
+        "       INPUT-OUTPUT SECTION.\n"
+        "       FILE-CONTROL.\n"
+        "           SELECT INPUT-A ASSIGN TO \"INPUT.DAT\"\n"
+        "               FILE STATUS IS FILE-STATUS.\n"
+        "       DATA DIVISION.\n"
+        "       FILE SECTION.\n"
+        "       FD INPUT-A DATA RECORD IS INPUT-RECORD.\n"
+        "       01 INPUT-RECORD PIC X(10).\n"
+        "       SD SORT-FILE.\n"
+        "       01 SORT-RECORD PIC X(10).\n"
+        "       WORKING-STORAGE SECTION.\n"
+        "       01 RATE PIC V999 VALUE 0,25.\n"
+        "       01 DASHES PIC X(5) VALUE ALL \"-\".\n"
+        "       SCREEN SECTION.\n"
+        "       01 TEST-SCREEN.\n"
+        "          05 BLANK SCREEN.\n"
+        "          05 LINE 02 COLUMN 10 VALUE \"TITLE\".\n"
+        "          05 LINE 04 COLUMN 10 PIC X(10) USING TEXT-VALUE.\n"
+        "       PROCEDURE DIVISION.\n"
+        "           DISPLAY \"Name\" AT LINE 5 COLUMN 10 TEXT-VALUE.\n"
+        "           STOP RUN.\n",
+        1);
+
+    failures += parse_source(
+        "       IDENTIFICATION DIVISION.\n"
+        "       PROGRAM-ID. EMBEDDED-CODE.\n"
+        "       DATA DIVISION.\n"
+        "       WORKING-STORAGE SECTION.\n"
+        "       EXEC SQL INCLUDE SQLCA END-EXEC.\n"
+        "       01 FIELD-A PIC X.\n"
+        "       PROCEDURE DIVISION.\n"
+        "           EXEC CICS RETURN END-EXEC.\n"
+        "           STOP RUN.\n",
+        1);
+
+    failures += parse_source(
+        "       IDENTIFICATION DIVISION.\n"
+        "       PROGRAM-ID. UNSTRING-ERROR.\n"
+        "       PROCEDURE DIVISION.\n"
+        "           UNSTRING SOURCE-VALUE DELIMITED BY '-'\n"
+        "               INTO TARGET-A, END-UNSTRING.\n",
         0);
 
     if (failures != 0) {

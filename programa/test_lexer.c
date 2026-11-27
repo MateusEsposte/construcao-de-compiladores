@@ -220,6 +220,21 @@ int main(void)
         "       DISPLAY \"ok\".\n",
         comments, sizeof(comments) / sizeof(comments[0]));
 
+    static const ExpectedToken inline_comments[] = {
+        {TOK_DISPLAY, "DISPLAY"},
+        {TOK_ALPHANUMERIC_LITERAL, "\"texto *> literal\""},
+        {TOK_PERIOD, "."},
+        {TOK_STOP, "STOP"},
+        {TOK_RUN, "RUN"},
+        {TOK_PERIOD, "."}
+    };
+    failures += test_source(
+        "comentario em linha com literal contendo o marcador",
+        "       DISPLAY \"texto *> literal\". *> comentario\n"
+        "       STOP RUN.\n",
+        inline_comments,
+        sizeof(inline_comments) / sizeof(inline_comments[0]));
+
     static const ExpectedToken identifier_extensions[] = {
         {TOK_ERROR, "_"},
         {TOK_KEYWORD, "STRING"},

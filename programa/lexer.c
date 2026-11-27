@@ -663,9 +663,19 @@ static Token read_symbol(Lexer *lexer, TokenType type, size_t length){
 Token lexer_next_token(Lexer *lexer){
     Token token;
 
-    while (lexer->current_char != EOF &&
-           isspace((unsigned char)lexer->current_char)) {
-        lexer_advance(lexer);
+    for (;;) {
+        while (lexer->current_char != EOF &&
+               isspace((unsigned char)lexer->current_char)) {
+            lexer_advance(lexer);
+        }
+
+        if (lexer->current_char != '*' || peek_next_char(lexer) != '>') {
+            break;
+        }
+
+        while (lexer->current_char != EOF && lexer->current_char != '\n') {
+            lexer_advance_raw(lexer);
+        }
     }
 
     token.line = lexer->line;
