@@ -1045,7 +1045,6 @@ static int parse_io_handlers(Parser *parser, int enclosing_stop_else)
         while (!is_type(parser, TOK_EOF) && !is_type(parser, TOK_PERIOD) &&
                !is_type(parser, TOK_INVALID) && !is_type(parser, TOK_NOT) &&
                !word_is(parser, "END-WRITE") &&
-               !word_is(parser, "END-READ") &&
                !(enclosing_stop_else && is_type(parser, TOK_ELSE))) {
             if (!is_statement_start(parser) ||
                 !parse_statement(parser, enclosing_stop_else)) {
