@@ -940,12 +940,20 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         if (!parse_name(parser)) {
             return 0;
         }
+        accept_type(parser, TOK_RECORD);
         if (accept_type(parser, TOK_INTO) &&
             !parse_data_reference(parser)) {
             return 0;
         }
+        if (accept_type(parser, TOK_KEY)) {
+            accept_word(parser, "IS");
+            if (!parse_data_reference(parser)) {
+                return 0;
+            }
+        }
         while (!is_type(parser, TOK_EOF) && !is_type(parser, TOK_PERIOD) &&
-               !word_is(parser, "END-READ")) {
+               !word_is(parser, "END-READ") &&
+               !(enclosing_stop_else && is_type(parser, TOK_ELSE))) {
             if (accept_type(parser, TOK_AT)) {
                 if (!expect_type(parser, TOK_END, "END")) {
                     return 0;
@@ -953,6 +961,12 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
             } else if (accept_type(parser, TOK_NOT)) {
                 if (!expect_type(parser, TOK_AT, "AT") ||
                     !expect_type(parser, TOK_END, "END")) {
+                    return 0;
+                }
+            } else if (is_type(parser, TOK_INVALID) ||
+                       (is_type(parser, TOK_NOT) &&
+                        next_word_is(parser, "INVALID"))) {
+                if (!parse_io_handlers(parser, enclosing_stop_else)) {
                     return 0;
                 }
             } else if (is_statement_start(parser)) {
