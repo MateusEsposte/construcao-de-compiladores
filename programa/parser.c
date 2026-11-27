@@ -12,6 +12,7 @@ typedef struct {
     Token next;
     FILE *diagnostics;
     int errors;
+    int decimal_point_is_comma;
 } Parser;
 
 static void advance(Parser *parser)
@@ -160,6 +161,10 @@ static int is_statement_start(const Parser *parser)
             return 1;
         default:
             return word_is(parser, "EVALUATE") ||
+                   word_is(parser, "ALTER") ||
+                   word_is(parser, "EXEC") ||
+                   word_is(parser, "SORT") ||
+                   word_is(parser, "UNSTRING") ||
                    word_is(parser, "EXIT") ||
                    word_is(parser, "CONTINUE") ||
                    word_is(parser, "INITIALIZE") ||
@@ -230,8 +235,17 @@ static int parse_data_reference(Parser *parser)
 
 static int parse_primary(Parser *parser)
 {
-    if (accept_type(parser, TOK_NUMERIC_LITERAL) ||
-        accept_type(parser, TOK_ALPHANUMERIC_LITERAL) ||
+    if (accept_type(parser, TOK_NUMERIC_LITERAL)) {
+        if (parser->decimal_point_is_comma &&
+            is_type(parser, TOK_COMMA) &&
+            parser->next.type == TOK_NUMERIC_LITERAL) {
+            advance(parser);
+            advance(parser);
+        }
+        return 1;
+    }
+
+    if (accept_type(parser, TOK_ALPHANUMERIC_LITERAL) ||
         accept_type(parser, TOK_SPACES) ||
         accept_type(parser, TOK_ZERO) ||
         accept_type(parser, TOK_ZEROS) ||
@@ -253,6 +267,11 @@ static int parse_primary(Parser *parser)
         if (accept_type(parser, TOK_LPAREN)) {
             if (!parse_expression(parser)) {
                 return 0;
+            }
+            while (accept_type(parser, TOK_COMMA)) {
+                if (!parse_expression(parser)) {
+                    return 0;
+                }
             }
             return expect_type(parser, TOK_RPAREN, "\")\"");
         }
@@ -406,9 +425,11 @@ static int parse_operand_list(Parser *parser, int required)
            !is_type(parser, TOK_INVALID) &&
            !is_procedure_header(parser) &&
            !word_is(parser, "END-PERFORM") &&
+           !word_is(parser, "END-WRITE") &&
            !word_is(parser, "TO") && !word_is(parser, "FROM") &&
            !word_is(parser, "BY") && !word_is(parser, "GIVING") &&
            !word_is(parser, "REMAINDER") &&
+           !is_type(parser, TOK_INTO) &&
            !word_is(parser, "UNTIL") &&
            !word_is(parser, "INVALID") &&
            !word_is(parser, "NOT") &&
@@ -434,9 +455,35 @@ static int parse_statements(Parser *parser, int stop_else,
 static int is_paragraph_header(const Parser *parser);
 static int parse_io_handlers(Parser *parser, int enclosing_stop_else);
 
+static int parse_exec_block(Parser *parser, int require_sql)
+{
+    if (!expect_word(parser, "EXEC")) {
+        return 0;
+    }
+
+    if (require_sql) {
+        if (!expect_word(parser, "SQL")) {
+            return 0;
+        }
+    } else {
+        advance(parser);
+    }
+
+    while (!is_type(parser, TOK_EOF) && !word_is(parser, "END-EXEC")) {
+        advance(parser);
+    }
+    return expect_word(parser, "END-EXEC");
+}
+
 static int parse_statement(Parser *parser, int enclosing_stop_else)
 {
     if (accept_word(parser, "EXIT")) {
+        if (accept_word(parser, "PERFORM")) {
+            return 1;
+        }
+        if (!accept_word(parser, "PARAGRAPH")) {
+            accept_word(parser, "SECTION");
+        }
         return 1;
     }
 
@@ -448,6 +495,10 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         return expect_type(parser, TOK_TO, "TO") && parse_name(parser);
     }
 
+    if (word_is(parser, "EXEC")) {
+        return parse_exec_block(parser, 0);
+    }
+
     if (accept_word(parser, "CALL")) {
         if (is_type(parser, TOK_ALPHANUMERIC_LITERAL)) {
             advance(parser);
@@ -456,10 +507,19 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         }
         if (accept_word(parser, "USING")) {
             do {
+                if (accept_type(parser, TOK_BY) &&
+                    !accept_word(parser, "REFERENCE") &&
+                    !accept_word(parser, "CONTENT") &&
+                    !accept_word(parser, "VALUE")) {
+                    report(parser,
+                           "esperado REFERENCE, CONTENT ou VALUE apos BY");
+                    return 0;
+                }
                 if (!parse_primary(parser)) {
                     return 0;
                 }
-            } while (accept_type(parser, TOK_COMMA));
+            } while (accept_type(parser, TOK_COMMA) ||
+                     is_type(parser, TOK_BY));
         }
         return 1;
     }
@@ -483,6 +543,17 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         if (!parse_operand_list(parser, 1)) {
             return 0;
         }
+        if (accept_type(parser, TOK_AT)) {
+            accept_word(parser, "LINE");
+            if (!parse_expression(parser) ||
+                !expect_word(parser, "COLUMN") ||
+                !parse_expression(parser)) {
+                return 0;
+            }
+            if (!parse_operand_list(parser, 0)) {
+                return 0;
+            }
+        }
         if (accept_word(parser, "WITH")) {
             accept_word(parser, "NO");
             accept_word(parser, "ADVANCING");
@@ -491,7 +562,18 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
     }
 
     if (accept_type(parser, TOK_ACCEPT)) {
-        return parse_data_reference(parser);
+        if (!parse_data_reference(parser)) {
+            return 0;
+        }
+        if (accept_type(parser, TOK_FROM)) {
+            if (!parse_name(parser)) {
+                return 0;
+            }
+            if (word_is(parser, "YYYYMMDD") || word_is(parser, "YYYYDDD")) {
+                advance(parser);
+            }
+        }
+        return 1;
     }
 
     if (accept_type(parser, TOK_MOVE)) {
@@ -526,6 +608,21 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
                 !parse_operand_list(parser, 1)) {
                 return 0;
             }
+        } else if (operation == TOK_DIVIDE) {
+            if (accept_type(parser, TOK_INTO)) {
+                if (!parse_operand_list(parser, 1)) {
+                    return 0;
+                }
+                if (accept_word(parser, "GIVING") &&
+                    !parse_operand_list(parser, 1)) {
+                    return 0;
+                }
+            } else if (!expect_type(parser, TOK_BY, "BY") ||
+                       !parse_operand_list(parser, 1) ||
+                       !expect_type(parser, TOK_GIVING, "GIVING") ||
+                       !parse_operand_list(parser, 1)) {
+                return 0;
+            }
         } else if (!expect_type(parser, TOK_BY, "BY") ||
                    !parse_operand_list(parser, 1)) {
             return 0;
@@ -542,6 +639,20 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         if (accept_type(parser, TOK_ON)) {
             accept_word(parser, "SIZE");
             accept_type(parser, TOK_ERROR_WORD);
+            while (!is_type(parser, TOK_EOF) &&
+                   !is_type(parser, TOK_PERIOD) &&
+                   !is_type(parser, TOK_NOT)) {
+                if (!is_statement_start(parser) ||
+                    !parse_statement(parser, enclosing_stop_else)) {
+                    return 0;
+                }
+            }
+        }
+        if (accept_type(parser, TOK_NOT)) {
+            if (!expect_type(parser, TOK_SIZE, "SIZE")) {
+                return 0;
+            }
+            accept_type(parser, TOK_ERROR_WORD);
             if (!parse_statements(parser, enclosing_stop_else, 1, 1, 1)) {
                 return 0;
             }
@@ -550,8 +661,11 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
     }
 
     if (accept_type(parser, TOK_COMPUTE)) {
-        if (!parse_data_reference(parser) ||
-            !expect_type(parser, TOK_EQUAL, "\"=\"") ||
+        if (!parse_data_reference(parser)) {
+            return 0;
+        }
+        accept_word(parser, "ROUNDED");
+        if (!expect_type(parser, TOK_EQUAL, "\"=\"") ||
             !parse_expression(parser)) {
             return 0;
         }
@@ -562,6 +676,7 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         if (!parse_condition(parser, 1)) {
             return 0;
         }
+        accept_word(parser, "THEN");
         if (!parse_statements(parser, 1, 1, 0, 0)) {
             return 0;
         }
@@ -605,8 +720,23 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
                 return 0;
             }
             return 1;
+        } else if (accept_type(parser, TOK_UNTIL)) {
+            if (!parse_condition(parser, 1)) {
+                return 0;
+            }
+            while (!is_type(parser, TOK_EOF) &&
+                   !is_type(parser, TOK_PERIOD) &&
+                   !word_is(parser, "END-PERFORM")) {
+                if (!is_statement_start(parser) ||
+                    !parse_statement(parser, enclosing_stop_else)) {
+                    return 0;
+                }
+            }
+            return expect_word(parser, "END-PERFORM");
         } else if (is_name(parser)) {
-            parse_name(parser);
+            if (!parse_name(parser)) {
+                return 0;
+            }
         } else if (!parse_statements(parser, enclosing_stop_else, 0, 0, 0)) {
             return 0;
         }
@@ -645,6 +775,7 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
     }
 
     if (accept_type(parser, TOK_SEARCH)) {
+        accept_word(parser, "ALL");
         if (!parse_data_reference(parser)) {
             return 0;
         }
@@ -702,16 +833,95 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         return 1;
     }
 
+    if (accept_word(parser, "SORT")) {
+        if (!parse_name(parser) || !expect_word(parser, "ON") ||
+            (!accept_word(parser, "ASCENDING") &&
+             !accept_word(parser, "DESCENDING")) ||
+            !expect_type(parser, TOK_KEY, "KEY")) {
+            return 0;
+        }
+        do {
+            if (!parse_name(parser)) {
+                return 0;
+            }
+        } while (accept_type(parser, TOK_COMMA));
+
+        if (accept_word(parser, "USING")) {
+            do {
+                if (!parse_name(parser)) {
+                    return 0;
+                }
+            } while (accept_type(parser, TOK_COMMA));
+        }
+        if (accept_type(parser, TOK_GIVING)) {
+            do {
+                if (!parse_name(parser)) {
+                    return 0;
+                }
+            } while (accept_type(parser, TOK_COMMA));
+        }
+        return 1;
+    }
+
+    if (accept_word(parser, "UNSTRING")) {
+        if (!parse_data_reference(parser) ||
+            !expect_word(parser, "DELIMITED") ||
+            !expect_type(parser, TOK_BY, "BY")) {
+            return 0;
+        }
+        accept_type(parser, TOK_ALL);
+        if (!parse_primary(parser) ||
+            !expect_type(parser, TOK_INTO, "INTO")) {
+            return 0;
+        }
+        for (;;) {
+            if (!parse_data_reference(parser)) {
+                return 0;
+            }
+            int has_comma = accept_type(parser, TOK_COMMA);
+            if (has_comma &&
+                (is_type(parser, TOK_EOF) ||
+                 is_type(parser, TOK_PERIOD) ||
+                 word_is(parser, "END-UNSTRING"))) {
+                report(parser, "esperado operando apos virgula em UNSTRING");
+                return 0;
+            }
+            if (is_type(parser, TOK_EOF) || is_type(parser, TOK_PERIOD) ||
+                word_is(parser, "END-UNSTRING") ||
+                is_statement_start(parser)) {
+                break;
+            }
+        }
+        accept_word(parser, "END-UNSTRING");
+        return 1;
+    }
+
     if (accept_type(parser, TOK_OPEN)) {
-        if (!accept_word(parser, "INPUT") && !accept_word(parser, "OUTPUT") &&
-            !accept_word(parser, "I-O")) {
-            report(parser, "esperado modo INPUT, OUTPUT ou I-O em OPEN");
+        do {
+            if (!accept_word(parser, "INPUT") &&
+                !accept_word(parser, "OUTPUT") &&
+                !accept_word(parser, "I-O") &&
+                !accept_word(parser, "EXTEND")) {
+                report(parser,
+                       "esperado modo INPUT, OUTPUT, I-O ou EXTEND em OPEN");
+                return 0;
+            }
+            if (!parse_data_reference(parser)) {
+                return 0;
+            }
+            while (is_name(parser) && !is_statement_start(parser) &&
+                   parse_data_reference(parser)) {
+            }
+        } while (word_is(parser, "INPUT") || word_is(parser, "OUTPUT") ||
+                 word_is(parser, "I-O") || word_is(parser, "EXTEND"));
+        return 1;
+    }
+
+    if (accept_word(parser, "ALTER")) {
+        if (!parse_name(parser) || !expect_word(parser, "TO") ||
+            !expect_word(parser, "PROCEED") || !expect_word(parser, "TO") ||
+            !parse_name(parser)) {
             return 0;
-        }
-        if (!parse_data_reference(parser)) {
-            return 0;
-        }
-        while (is_name(parser) && parse_data_reference(parser)) {
         }
         return 1;
     }
@@ -720,7 +930,8 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
         if (!parse_data_reference(parser)) {
             return 0;
         }
-        while (is_name(parser) && parse_data_reference(parser)) {
+        while (is_name(parser) && !is_statement_start(parser) &&
+               parse_data_reference(parser)) {
         }
         return 1;
     }
@@ -768,8 +979,11 @@ static int parse_statement(Parser *parser, int enclosing_stop_else)
             return 0;
         }
         if (is_type(parser, TOK_INVALID) || is_type(parser, TOK_NOT)) {
-            return parse_io_handlers(parser, enclosing_stop_else);
+            if (!parse_io_handlers(parser, enclosing_stop_else)) {
+                return 0;
+            }
         }
+        accept_word(parser, "END-WRITE");
         return 1;
     }
 
@@ -816,6 +1030,7 @@ static int parse_io_handlers(Parser *parser, int enclosing_stop_else)
 
         while (!is_type(parser, TOK_EOF) && !is_type(parser, TOK_PERIOD) &&
                !is_type(parser, TOK_INVALID) && !is_type(parser, TOK_NOT) &&
+               !word_is(parser, "END-WRITE") &&
                !(enclosing_stop_else && is_type(parser, TOK_ELSE))) {
             if (!is_statement_start(parser) ||
                 !parse_statement(parser, enclosing_stop_else)) {
@@ -933,8 +1148,21 @@ static int parse_environment_text(Parser *parser, const char *clause,
     int values = 0;
 
     while (!is_type(parser, TOK_EOF) && !is_type(parser, TOK_PERIOD)) {
+        if (words_equal(clause, "SPECIAL-NAMES") &&
+            word_is(parser, "DECIMAL-POINT") &&
+            next_word_is(parser, "IS")) {
+            advance(parser);
+            advance(parser);
+            if (accept_word(parser, "COMMA")) {
+                parser->decimal_point_is_comma = 1;
+            }
+            values++;
+            continue;
+        }
+
         if (is_name(parser) || is_type(parser, TOK_NUMERIC_LITERAL) ||
             is_type(parser, TOK_ALPHANUMERIC_LITERAL) ||
+            is_type(parser, TOK_STATUS) ||
             is_type(parser, TOK_COMMA) || is_type(parser, TOK_LPAREN) ||
             is_type(parser, TOK_RPAREN)) {
             advance(parser);
@@ -966,11 +1194,15 @@ static int parse_select_clause(Parser *parser)
 
     while (!is_type(parser, TOK_PERIOD) && !is_type(parser, TOK_EOF)) {
         if (accept_type(parser, TOK_FILE)) {
-            if (!expect_type(parser, TOK_STATUS, "STATUS") ||
-                !parse_name(parser)) {
+            if (!expect_type(parser, TOK_STATUS, "STATUS")) {
+                return 0;
+            }
+            accept_word(parser, "IS");
+            if (!parse_name(parser)) {
                 return 0;
             }
         } else if (accept_type(parser, TOK_STATUS)) {
+            accept_word(parser, "IS");
             if (!parse_name(parser)) {
                 return 0;
             }
@@ -1005,6 +1237,10 @@ static int parse_select_clause(Parser *parser)
             accept_word(parser, "IS");
             if (!parse_name(parser)) {
                 return 0;
+            }
+            accept_word(parser, "WITH");
+            if (accept_word(parser, "DUPLICATES")) {
+                continue;
             }
         } else if (accept_word(parser, "RELATIVE")) {
             if (!expect_type(parser, TOK_KEY, "KEY")) {
@@ -1193,7 +1429,7 @@ static void append_picture_char(int c, int *symbols, int *data_symbols,
         }
         *seen_sign = 1;
     } else if (c == 'V') {
-        if (*symbols == 0 || *seen_decimal) {
+        if (*seen_decimal) {
             *invalid = 1;
         }
         *seen_decimal = 1;
@@ -1223,6 +1459,13 @@ static int parse_picture(Parser *parser)
     while (!is_type(parser, TOK_EOF)) {
         if (is_type(parser, TOK_IDENTIFIER) ||
             is_type(parser, TOK_NUMERIC_LITERAL)) {
+            if (word_is(parser, "USING") || word_is(parser, "REDEFINES") ||
+                word_is(parser, "COMP-3") || word_is(parser, "COMP") ||
+                word_is(parser, "OCCURS") || word_is(parser, "ASCENDING") ||
+                word_is(parser, "DESCENDING") || word_is(parser, "LINE") ||
+                word_is(parser, "COLUMN")) {
+                break;
+            }
             const unsigned char *text =
                 (const unsigned char *)parser->current.lexeme;
             while (text != NULL && *text != '\0') {
@@ -1267,8 +1510,7 @@ static int parse_picture(Parser *parser)
     }
 
     if (symbols == 0 || data_symbols == 0 ||
-        (seen_decimal &&
-         (digits_before_decimal == 0 || digits_after_decimal == 0)) ||
+        (seen_decimal && digits_after_decimal == 0) ||
         invalid) {
         report(parser, "cadeia PIC invalida");
         return 0;
@@ -1280,6 +1522,7 @@ typedef struct {
     int level;
     int has_picture;
     int has_children;
+    int has_screen_attributes;
 } DataEntry;
 
 static int finish_data_entry(Parser *parser, const DataEntry *entry)
@@ -1289,7 +1532,8 @@ static int finish_data_entry(Parser *parser, const DataEntry *entry)
                entry->level);
         return 0;
     }
-    if (!entry->has_picture && !entry->has_children) {
+    if (!entry->has_picture && !entry->has_children &&
+        !entry->has_screen_attributes) {
         report(parser, "item elementar de nivel %02d exige PIC",
                entry->level);
         return 0;
@@ -1301,7 +1545,7 @@ static int finish_data_entry(Parser *parser, const DataEntry *entry)
     return 1;
 }
 
-static int parse_data_entry(Parser *parser, DataEntry *entry)
+static int parse_data_entry(Parser *parser, DataEntry *entry, int section)
 {
     char level_text[16];
     if (!is_type(parser, TOK_NUMERIC_LITERAL) ||
@@ -1341,15 +1585,31 @@ static int parse_data_entry(Parser *parser, DataEntry *entry)
     entry->level = level;
     entry->has_picture = 0;
     entry->has_children = 0;
+    entry->has_screen_attributes = 0;
 
-    if (!parse_name(parser)) {
+    int position;
+    if (section == 4 && accept_word(parser, "BLANK")) {
+        if (!expect_word(parser, "SCREEN")) {
+            return 0;
+        }
+        entry->has_screen_attributes = 1;
+    } else if (section == 4 && accept_word(parser, "LINE")) {
+        if (!parse_unsigned_integer(parser, &position)) {
+            return 0;
+        }
+        if (accept_word(parser, "COLUMN") &&
+            !parse_unsigned_integer(parser, &position)) {
+            return 0;
+        }
+        entry->has_screen_attributes = 1;
+    } else if (!parse_name(parser)) {
         return 0;
     }
 
     int has_value = 0;
     int has_occurs = 0;
     while (!is_type(parser, TOK_PERIOD) && !is_type(parser, TOK_EOF)) {
-        if (accept_type(parser, TOK_PIC)) {
+        if (accept_type(parser, TOK_PIC) || accept_word(parser, "PICTURE")) {
             if (entry->has_picture) {
                 report(parser, "PIC duplicado na declaracao");
                 return 0;
@@ -1368,11 +1628,39 @@ static int parse_data_entry(Parser *parser, DataEntry *entry)
                  !is_type(parser, TOK_ZERO) &&
                  !is_type(parser, TOK_ZEROS) &&
                  !is_type(parser, TOK_SPACES) &&
+                 !word_is(parser, "ALL") &&
+                 !word_is(parser, "SPACE") &&
                  !is_type(parser, TOK_LOW_VALUES))) {
                 report(parser, "literal VALUE invalido ou clausula duplicada");
                 return 0;
             }
             has_value = 1;
+            if (section == 4) {
+                entry->has_screen_attributes = 1;
+            }
+            if (accept_word(parser, "SPACE")) {
+                continue;
+            }
+            if (accept_word(parser, "ALL")) {
+                if (!is_type(parser, TOK_ALPHANUMERIC_LITERAL)) {
+                    report(parser, "esperado literal apos VALUE ALL");
+                    return 0;
+                }
+                advance(parser);
+                continue;
+            }
+            if (is_type(parser, TOK_NUMERIC_LITERAL)) {
+                advance(parser);
+                if (parser->decimal_point_is_comma &&
+                    accept_type(parser, TOK_COMMA)) {
+                    if (!is_type(parser, TOK_NUMERIC_LITERAL)) {
+                        report(parser, "esperados digitos apos virgula decimal");
+                        return 0;
+                    }
+                    advance(parser);
+                }
+                continue;
+            }
             advance(parser);
         } else if (accept_type(parser, TOK_OCCURS)) {
             int occurrences;
@@ -1382,6 +1670,18 @@ static int parse_data_entry(Parser *parser, DataEntry *entry)
                 return 0;
             }
             has_occurs = 1;
+            if (accept_word(parser, "ASCENDING") ||
+                accept_word(parser, "DESCENDING")) {
+                if (!expect_word(parser, "KEY")) {
+                    return 0;
+                }
+                accept_word(parser, "IS");
+                do {
+                    if (!parse_name(parser)) {
+                        return 0;
+                    }
+                } while (accept_type(parser, TOK_COMMA));
+            }
             if (accept_type(parser, TOK_INDEXED)) {
                 if (!expect_type(parser, TOK_BY, "BY") ||
                     !parse_name(parser)) {
@@ -1394,6 +1694,29 @@ static int parse_data_entry(Parser *parser, DataEntry *entry)
             }
         } else if (accept_word(parser, "COMP")) {
             continue;
+        } else if (accept_word(parser, "COMP-3")) {
+            continue;
+        } else if (section == 4 && accept_word(parser, "SCREEN")) {
+            entry->has_screen_attributes = 1;
+        } else if (section == 4 && accept_word(parser, "LINE")) {
+            if (!parse_unsigned_integer(parser, &position)) {
+                return 0;
+            }
+            if (accept_word(parser, "COLUMN") &&
+                !parse_unsigned_integer(parser, &position)) {
+                return 0;
+            }
+            entry->has_screen_attributes = 1;
+        } else if (section == 4 && accept_word(parser, "COLUMN")) {
+            if (!parse_unsigned_integer(parser, &position)) {
+                return 0;
+            }
+            entry->has_screen_attributes = 1;
+        } else if (section == 4 && accept_word(parser, "USING")) {
+            if (!parse_name(parser)) {
+                return 0;
+            }
+            entry->has_screen_attributes = 1;
         } else {
             report(parser, "clausula inesperada em declaracao de nivel %02d: %s \"%s\"",
                    level, token_type_to_string(parser->current.type),
@@ -1417,7 +1740,8 @@ static int parse_data_entry(Parser *parser, DataEntry *entry)
         report(parser, "item de nivel 77 exige PIC");
         return 0;
     }
-    if (has_value && !entry->has_picture && level != 1) {
+    if (has_value && !entry->has_picture && level != 1 &&
+        !(section == 4 && entry->has_screen_attributes)) {
         report(parser, "clausula VALUE exige item elementar");
         return 0;
     }
@@ -1434,7 +1758,11 @@ static int is_data_section(const Parser *parser)
 
 static int parse_file_description(Parser *parser)
 {
-    if (!expect_type(parser, TOK_FD, "FD") || !parse_name(parser)) {
+    if (!accept_type(parser, TOK_FD) && !accept_word(parser, "SD")) {
+        report(parser, "esperado FD ou SD");
+        return 0;
+    }
+    if (!parse_name(parser)) {
         return 0;
     }
 
@@ -1463,6 +1791,14 @@ static int parse_file_description(Parser *parser)
                 return 0;
             }
             record_clause_seen = 1;
+        } else if (accept_type(parser, TOK_DATA)) {
+            if (!expect_type(parser, TOK_RECORD, "RECORD")) {
+                return 0;
+            }
+            accept_word(parser, "IS");
+            if (!parse_name(parser)) {
+                return 0;
+            }
         } else {
             report(parser, "clausula inesperada em FD: %s \"%s\"",
                    token_type_to_string(parser->current.type),
@@ -1523,15 +1859,23 @@ static int parse_data(Parser *parser)
             continue;
         }
 
-        if (is_type(parser, TOK_FD)) {
+        if (is_type(parser, TOK_FD) || word_is(parser, "SD")) {
             if (!finish_data_stack(parser, entries, &depth) || section != 1 ||
                 !parse_file_description(parser)) {
                 if (section != 1) {
-                    report(parser, "FD so e permitido em FILE SECTION");
+                    report(parser, "FD e SD so sao permitidos em FILE SECTION");
                 }
                 return 0;
             }
             previous_entry = 0;
+            continue;
+        }
+
+        if (word_is(parser, "EXEC")) {
+            if (!parse_exec_block(parser, 1)) {
+                return 0;
+            }
+            accept_type(parser, TOK_PERIOD);
             continue;
         }
 
@@ -1545,7 +1889,7 @@ static int parse_data(Parser *parser)
 
         if (is_type(parser, TOK_NUMERIC_LITERAL)) {
             DataEntry entry;
-            if (!parse_data_entry(parser, &entry)) {
+            if (!parse_data_entry(parser, &entry, section)) {
                 return 0;
             }
 
@@ -1662,6 +2006,7 @@ int parser_parse(FILE *source, FILE *diagnostics)
     parser.next = lexer_next_token(&parser.lexer);
     parser.diagnostics = diagnostics;
     parser.errors = 0;
+    parser.decimal_point_is_comma = 0;
 
     if (!parse_identification(&parser)) {
         goto done;
